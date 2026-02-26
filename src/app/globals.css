@@ -2,26 +2,141 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* 📚 LEARN: We import Inter from Google Fonts for consistent cross-browser typography.
+   Using @import in CSS is fine for fonts — Next.js will optimize this. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-@media (prefers-color-scheme: dark) {
+@layer base {
+  /* 📚 LEARN: CSS custom properties enable theme switching without changing Tailwind classes.
+     We define tokens in :root (dark default), and override them in .light class. */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --color-bg: #0A0A0F;
+    --color-bg-surface: #111118;
+    --color-bg-surface-hover: #1A1A25;
+    --color-border: #2A2A38;
+    --color-text-primary: #F0F0F5;
+    --color-text-secondary: #8888A8;
+  }
+
+  .light {
+    --color-bg: #F8F8FC;
+    --color-bg-surface: #FFFFFF;
+    --color-bg-surface-hover: #F0F0F5;
+    --color-border: #E0E0E8;
+    --color-text-primary: #1A1A2E;
+    --color-text-secondary: #6B6B8A;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-bg-surface-hover);
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Glassmorphism card — reusable across components */
+  .glass-card {
+    background: var(--color-bg-surface);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  /* Instagram gradient accent */
+  .gradient-accent {
+    background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gradient border trick using pseudo-element */
+  .gradient-border {
+    position: relative;
+    background: var(--color-bg-surface);
+    border-radius: 16px;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 17px;
+    background: linear-gradient(135deg, #833AB4, #FD1D1D, #F77737);
+    z-index: -1;
+    opacity: 0.4;
+  }
+
+  /* Shimmer skeleton loading */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-bg-surface-hover);
+    border-radius: 8px;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(128, 128, 128, 0.08),
+      transparent
+    );
+    animation: shimmer 2s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Focus visible ring for accessibility */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-purple focus-visible:ring-offset-2 focus-visible:ring-offset-bg;
   }
 }

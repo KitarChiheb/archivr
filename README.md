@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Archivr
 
-## Getting Started
+**Your Instagram saves, finally organized.**
 
-First, run the development server:
+Archivr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive. Built with Next.js 14, TypeScript, Zustand, Tailwind CSS, and Framer Motion.
+
+## Features
+
+- **Smart Collections** — Organize saves into custom folders
+- **AI Auto-Tagging** — Let AI categorize your posts automatically (via OpenRouter)
+- **Live Search** — Filter posts by caption, tag, or URL in real-time
+- **Multiple Import Methods** — Instagram JSON export, URL paste, or demo data
+- **Offline-First** — All data stored locally in IndexedDB
+- **Beautiful UI** — Dark theme with glassmorphism and smooth animations
+
+## Quick Start
 
 ```bash
+# 1. Clone the repository
+git clone <repo-url>
+cd archivr
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local and add your OpenRouter API key
+
+# 4. Start dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|---|---|---|
+| `OPENROUTER_API_KEY` | For AI features | Get a free key at [openrouter.ai/keys](https://openrouter.ai/keys) |
+| `NEXT_PUBLIC_APP_URL` | Optional | Your deployed app URL |
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript (strict mode)
+- **Styling:** Tailwind CSS
+- **State:** Zustand + IndexedDB (via idb)
+- **AI:** OpenRouter API (free Llama models)
+- **Icons:** Lucide React
+- **Animations:** Framer Motion
+- **Drag & Drop:** @dnd-kit/core
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push to GitHub
+2. Import in Vercel
+3. Add `OPENROUTER_API_KEY` environment variable
+4. Deploy — zero config needed
