@@ -192,7 +192,7 @@ export default function ImportPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-h2 text-text-primary mb-2">Import Your Saves</h1>
-          <p className="text-text-secondary">Choose how you&apos;d like to get your posts into Archivr</p>
+          <p className="text-text-secondary">Choose how you&apos;d like to get your posts into Archivrr</p>
         </div>
 
         {/* Tab selector */}

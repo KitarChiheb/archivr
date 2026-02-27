@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { FolderInput, Tag, Sparkles, ExternalLink, Trash2, Instagram } from 'lucide-react';
+import { FolderInput, Tag, Sparkles, ExternalLink, Trash2, Instagram, Film, Image as ImageIcon, Video, BookOpen } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { SavedPost, Collection } from '@/lib/types';
 import { formatRelativeTime } from '@/lib/utils/dates';
@@ -13,6 +13,39 @@ import { getTagColor } from '@/lib/utils/colors';
 // It uses Next.js Image for lazy loading + optimization, and
 // Framer Motion for hover/enter animations. All actions are
 // revealed on hover via an overlay — keeping the default view clean.
+
+// Extract post type and shortcode from Instagram URL
+function getPostInfo(url: string): { type: string; shortcode: string; icon: React.ReactNode } {
+  const path = url.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '').replace(/\?.*$/, '');
+  const parts = path.split('/');
+  const typeSegment = parts[0]?.toLowerCase() || '';
+  const shortcode = parts[1] || parts[0] || '';
+
+  if (typeSegment === 'reel' || typeSegment === 'reels') return { type: 'Reel', shortcode, icon: <Film size={28} /> };
+  if (typeSegment === 'tv') return { type: 'IGTV', shortcode, icon: <Video size={28} /> };
+  if (typeSegment === 'stories') return { type: 'Story', shortcode, icon: <BookOpen size={28} /> };
+  return { type: 'Post', shortcode, icon: <ImageIcon size={28} /> };
+}
+
+// Generate a deterministic gradient from the URL for visual variety
+function getPostGradient(url: string): string {
+  let hash = 0;
+  for (let i = 0; i < url.length; i++) {
+    hash = ((hash << 5) - hash) + url.charCodeAt(i);
+    hash |= 0;
+  }
+  const gradients = [
+    'linear-gradient(135deg, #833AB4 0%, #FD1D1D 50%, #F77737 100%)',
+    'linear-gradient(135deg, #405DE6 0%, #833AB4 50%, #C13584 100%)',
+    'linear-gradient(135deg, #E1306C 0%, #F77737 50%, #FCAF45 100%)',
+    'linear-gradient(135deg, #833AB4 0%, #5B51D8 50%, #405DE6 100%)',
+    'linear-gradient(135deg, #FD1D1D 0%, #E1306C 50%, #C13584 100%)',
+    'linear-gradient(135deg, #F77737 0%, #FCAF45 50%, #FFDC80 100%)',
+    'linear-gradient(135deg, #5B51D8 0%, #405DE6 50%, #5851DB 100%)',
+    'linear-gradient(135deg, #C13584 0%, #833AB4 50%, #5B51D8 100%)',
+  ];
+  return gradients[Math.abs(hash) % gradients.length];
+}
 
 interface PostCardProps {
   post: SavedPost;
@@ -33,6 +66,8 @@ export default function PostCard({
 }: PostCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+  const postInfo = getPostInfo(post.url);
 
   return (
     <motion.div
@@ -49,12 +84,12 @@ export default function PostCard({
       {/* Image container */}
       <div className="relative aspect-square bg-bg-surface-hover">
         {/* Skeleton loading */}
-        {!imageLoaded && post.thumbnailUrl && (
+        {!imageLoaded && post.thumbnailUrl && !imageFailed && (
           <div className="absolute inset-0 skeleton" />
         )}
 
         {/* Thumbnail */}
-        {post.thumbnailUrl ? (
+        {post.thumbnailUrl && !imageFailed ? (
           <Image
             src={post.thumbnailUrl}
             alt={post.caption || 'Instagram post'}
@@ -64,15 +99,31 @@ export default function PostCard({
               imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
             onLoad={() => setImageLoaded(true)}
+            onError={() => setImageFailed(true)}
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg-surface-hover gap-2">
-            <div className="w-12 h-12 rounded-xl bg-accent-purple/10 flex items-center justify-center">
-              <Instagram size={24} className="text-accent-purple" />
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+            style={{ background: getPostGradient(post.url) }}
+          >
+            {/* Post type icon */}
+            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center text-white shadow-lg">
+              {postInfo.icon}
             </div>
-            <span className="text-text-secondary text-[10px] px-3 text-center truncate max-w-full">
-              {post.url.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '') || 'Instagram Post'}
+            {/* Post type badge */}
+            <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs font-semibold tracking-wide">
+              {postInfo.type}
             </span>
+            {/* Shortcode */}
+            {postInfo.shortcode && (
+              <span className="text-white/70 text-[10px] px-4 text-center truncate max-w-[90%] font-mono">
+                {postInfo.shortcode}
+              </span>
+            )}
+            {/* Instagram logo watermark */}
+            <div className="absolute bottom-2 right-2 opacity-20">
+              <Instagram size={16} className="text-white" />
+            </div>
           </div>
         )}
 

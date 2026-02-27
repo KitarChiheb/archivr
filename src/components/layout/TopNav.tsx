@@ -19,7 +19,7 @@ export default function TopNav() {
     <nav className="sticky top-0 z-40 w-full border-b border-border bg-bg-surface/80 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto flex items-center justify-between px-4 h-14">
         <Link href="/" className="gradient-text text-lg font-bold shrink-0">
-          Archivr
+          Archivrr
         </Link>
         <div className="flex items-center gap-1">
           {links.map((link) => {

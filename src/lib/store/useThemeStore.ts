@@ -15,12 +15,12 @@ interface ThemeStore {
 }
 
 export const useThemeStore = create<ThemeStore>((set, get) => ({
-  theme: 'dark',
+  theme: 'light',
 
   hydrate: () => {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem('archivr-theme') as Theme | null;
-    const theme = stored || 'dark';
+    const theme = stored || 'light';
     set({ theme });
     document.documentElement.classList.toggle('dark', theme === 'dark');
     document.documentElement.classList.toggle('light', theme === 'light');

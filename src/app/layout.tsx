@@ -4,11 +4,11 @@ import "./globals.css";
 // 📚 LEARN: Metadata in Next.js App Router is defined as an exported object.
 // This sets the <title>, <meta description>, and Open Graph tags for SEO and social sharing.
 export const metadata: Metadata = {
-  title: "Archivr — Your Instagram saves, finally organized.",
+  title: "Archivrr — Your Instagram saves, finally organized.",
   description:
-    "Archivr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive.",
+    "Archivrr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive.",
   openGraph: {
-    title: "Archivr",
+    title: "Archivrr",
     description: "Your Instagram saves, finally organized.",
     type: "website",
   },
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="light" suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-bg text-text-primary transition-colors duration-300">
         {children}
       </body>

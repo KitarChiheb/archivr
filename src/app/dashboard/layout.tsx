@@ -31,6 +31,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [hydratePost, hydrateCollection]);
 
   // 📚 LEARN: We snapshot untagged posts at call time to avoid stale closure issues.
+  // The auto-tag loop is robust: it retries failed posts with exponential backoff,
+  // only stops on fatal errors (bad key), and continues through rate limits.
   const handleAIAutoTag = useCallback(async () => {
     if (!hasApiKey()) {
       addToast('error', 'Please add your OpenRouter API key in Settings first.');
@@ -48,46 +50,81 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     addToast('ai', `Analyzing ${untaggedPosts.length} posts...`);
 
     let processed = 0;
-    let failures = 0;
+    let consecutiveFailures = 0;
+    const failedPosts: typeof untaggedPosts = [];
+
     for (const post of untaggedPosts) {
       try {
         const result = await analyzePost(post.url, post.caption, (msg, variant) => addToast(variant, msg));
         await bulkAddTags(post.id, result.tags);
         await updatePost(post.id, { aiAnalyzed: true });
         processed++;
+        consecutiveFailures = 0;
 
         if (processed % 5 === 0) {
           addToast('ai', `Analyzed ${processed} of ${untaggedPosts.length} posts...`);
         }
 
-        // 📚 LEARN: Rate limit respect — wait between API calls to avoid 429 errors.
-        await new Promise((r) => setTimeout(r, 800));
+        // Wait between posts to respect rate limits
+        await new Promise((r) => setTimeout(r, 2500));
       } catch (err) {
         const code = err instanceof Error ? err.message : '';
-        failures++;
+        consecutiveFailures++;
+
+        // Fatal errors — stop immediately
         if (code === 'NO_API_KEY') {
           addToast('error', 'Please add your OpenRouter API key in Settings.');
           break;
-        } else if (code === 'INVALID_KEY') {
+        }
+        if (code === 'INVALID_KEY') {
           addToast('error', 'Your API key is invalid. Please check it in Settings.');
           break;
-        } else if (code === 'NO_CREDITS') {
-          addToast('error', 'No credits on your OpenRouter account. Add credits at openrouter.ai/credits for premium AI.');
-          break;
-        } else if (code === 'ALL_MODELS_FAILED') {
-          addToast('error', 'All AI models are rate-limited. Try again later or add credits to your OpenRouter account.');
-          break;
-        } else {
-          addToast('error', `Failed to analyze post ${processed + failures}. Continuing...`);
         }
-        // Wait longer after failures
-        await new Promise((r) => setTimeout(r, 2000));
+
+        // Non-fatal: rate limits, all models busy — save for retry
+        failedPosts.push(post);
+
+        if (consecutiveFailures >= 5) {
+          addToast('info', `Rate limited. Waiting 15s before continuing...`);
+          await new Promise((r) => setTimeout(r, 15000));
+          consecutiveFailures = 0;
+        } else {
+          // Exponential backoff: 3s, 6s, 9s, 12s
+          const backoff = 3000 * consecutiveFailures;
+          await new Promise((r) => setTimeout(r, backoff));
+        }
+      }
+    }
+
+    // Retry failed posts once with longer delays
+    if (failedPosts.length > 0 && consecutiveFailures < 5) {
+      addToast('ai', `Retrying ${failedPosts.length} failed posts with longer delays...`);
+      await new Promise((r) => setTimeout(r, 10000));
+
+      for (const post of failedPosts) {
+        // Check if it was already tagged (might have been retried)
+        const current = usePostStore.getState().posts.find((p) => p.id === post.id);
+        if (current?.aiAnalyzed) continue;
+
+        try {
+          const result = await analyzePost(post.url, post.caption, (msg, variant) => addToast(variant, msg));
+          await bulkAddTags(post.id, result.tags);
+          await updatePost(post.id, { aiAnalyzed: true });
+          processed++;
+          await new Promise((r) => setTimeout(r, 4000));
+        } catch {
+          // Second attempt failed — skip this post
+          await new Promise((r) => setTimeout(r, 5000));
+        }
       }
     }
 
     setIsAutoTagging(false);
+    const remaining = untaggedPosts.length - processed;
     if (processed > 0) {
-      addToast('success', `Done! Analyzed ${processed} posts${failures > 0 ? ` (${failures} failed)` : ''}.`);
+      addToast('success', `Done! Analyzed ${processed} of ${untaggedPosts.length} posts${remaining > 0 ? `. ${remaining} couldn't be tagged — try again later.` : '!'}`);
+    } else {
+      addToast('error', 'All AI models are currently busy. Please try again in a minute, or add credits at openrouter.ai/credits for more reliable tagging.');
     }
   }, [bulkAddTags, updatePost, addToast]);
 

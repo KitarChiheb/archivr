@@ -4,13 +4,14 @@
 
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
 
-// Free models — tried in order. When one is rate-limited, we fall back to the next.
+// Free models — tried in order. When one fails, we fall back to the next.
+// Using well-known, stable model IDs that are reliably available on OpenRouter.
 export const FREE_MODELS = [
-  'mistralai/mistral-small-3.1-24b-instruct:free',
   'meta-llama/llama-3.3-70b-instruct:free',
+  'mistralai/mistral-small-3.1-24b-instruct:free',
   'google/gemma-3-27b-it:free',
   'qwen/qwen3-14b:free',
-  'deepseek/deepseek-r1-0528:free',
+  'deepseek/deepseek-chat:free',
 ] as const;
 
 // Paid models — cheap, reliable fallbacks when all free models fail (BYOK)
@@ -88,7 +89,7 @@ export async function callOpenRouter(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
       'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'X-Title': 'Archivr',
+      'X-Title': 'Archivrr',
     },
     body: JSON.stringify({
       model,
@@ -124,7 +125,8 @@ export function hasApiKey(): boolean {
 }
 
 // 📚 LEARN: Client-side function that calls OUR API route (not OpenRouter directly).
-// It tries free models first, then falls back to paid models, reporting progress via callbacks.
+// It tries ALL models in a single loop — free first, then paid. ANY error (429, 500, model
+// not found, etc.) just moves to the next model. Only auth errors (invalid key) break early.
 export async function analyzePost(
   postUrl: string,
   caption?: string,
@@ -137,48 +139,39 @@ export async function analyzePost(
     throw new Error('NO_API_KEY');
   }
 
-  // Try free models first
-  for (let i = 0; i < FREE_MODELS.length; i++) {
-    const model = FREE_MODELS[i];
+  let notifiedPaidSwitch = false;
+
+  // Try ALL models in order: free first, then paid
+  for (let i = 0; i < ALL_MODELS.length; i++) {
+    const model = ALL_MODELS[i];
+    const isSwitchingToPaid = i === FREE_MODELS.length && !notifiedPaidSwitch;
+
+    if (isSwitchingToPaid) {
+      notifiedPaidSwitch = true;
+      onStatusUpdate?.('Free models busy, trying premium models...', 'info');
+    }
+
     try {
       const result = await callApiRoute(prompt, model, postUrl, apiKey);
       return result;
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
-      const isRateLimit = message.includes('429') || message.includes('rate');
-      if (isRateLimit && i < FREE_MODELS.length - 1) {
-        // Silent fallback to next free model
-        continue;
-      }
-      if (isRateLimit && i === FREE_MODELS.length - 1) {
-        // All free models exhausted — try paid
-        onStatusUpdate?.('Free models are rate-limited. Trying premium models...', 'info');
-        break;
-      }
-      // Non-rate-limit error — could be auth issue
-      if (message.includes('401') || message.includes('invalid') || message.includes('Unauthorized')) {
+
+      // Auth errors are fatal — wrong API key, stop immediately
+      if (message.includes('401') || message.includes('Unauthorized') || message.includes('invalid')) {
         throw new Error('INVALID_KEY');
       }
-      throw err;
-    }
-  }
 
-  // Try paid models (BYOK)
-  for (let i = 0; i < PAID_MODELS.length; i++) {
-    const model = PAID_MODELS[i];
-    try {
-      const result = await callApiRoute(prompt, model, postUrl, apiKey);
-      return result;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : '';
+      // Payment errors — no credits for paid models
       if (message.includes('402') || message.includes('insufficient') || message.includes('payment')) {
         throw new Error('NO_CREDITS');
       }
-      if (message.includes('429') && i < PAID_MODELS.length - 1) {
+
+      // For ANY other error (429, 500, 503, model not found, etc.) — try next model
+      // Add a small delay between retries to avoid hammering the API
+      if (i < ALL_MODELS.length - 1) {
+        await new Promise(r => setTimeout(r, 400));
         continue;
-      }
-      if (i === PAID_MODELS.length - 1) {
-        throw new Error('ALL_MODELS_FAILED');
       }
     }
   }

@@ -1,8 +1,8 @@
-# Archivr
+# Archivrr
 
 **Your Instagram saves, finally organized.** Made by chikit.
 
-Archivr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive. Built with Next.js 14, TypeScript, Zustand, Tailwind CSS, and Framer Motion.
+Archivrr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive. Built with Next.js 14, TypeScript, Zustand, Tailwind CSS, and Framer Motion.
 
 ## Features
 
@@ -55,38 +55,3 @@ No `.env.local` file is needed for the API key — it's stored securely in your 
 - **AI:** OpenRouter API (5 free models + 2 paid fallbacks)
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
-
-## Deploy to Vercel
-
-### Step-by-step
-
-1. **Push your code to GitHub**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git remote add origin https://github.com/YOUR_USERNAME/archivr.git
-   git push -u origin main
-   ```
-
-2. **Import in Vercel**
-   - Go to [vercel.com/new](https://vercel.com/new)
-   - Click **Import** next to your `archivr` repository
-   - Vercel auto-detects Next.js — no configuration needed
-
-3. **Set environment variable** (optional)
-   - In Vercel project settings → Environment Variables
-   - Add `NEXT_PUBLIC_APP_URL` = `https://your-app.vercel.app`
-   - This is only for the OpenRouter referrer header — not required
-
-4. **Deploy**
-   - Click **Deploy** — Vercel builds and deploys automatically
-   - Your app is live at `https://archivr-xxx.vercel.app`
-
-5. **Users set their own API key**
-   - Each user adds their own OpenRouter API key in the Settings page
-   - No server-side API key is needed — the app is fully BYOK (Bring Your Own Key)
-
-### One-click deploy
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)

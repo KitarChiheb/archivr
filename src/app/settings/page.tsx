@@ -117,7 +117,7 @@ export default function SettingsPage() {
                 <Info size={16} className="text-accent-purple shrink-0 mt-0.5" />
                 <div className="text-xs text-text-secondary leading-relaxed">
                   <p className="font-semibold text-text-primary mb-1">What is OpenRouter?</p>
-                  <p>OpenRouter gives you access to AI models for auto-tagging your posts. Archivr uses free models by default, but they can be rate-limited. For the best experience, we recommend adding a small credit ($1–5 lasts a long time).</p>
+                  <p>OpenRouter gives you access to AI models for auto-tagging your posts. Archivrr uses free models by default, but they can be rate-limited. For the best experience, we recommend adding a small credit ($1–5 lasts a long time).</p>
                 </div>
               </div>
             </div>
@@ -229,9 +229,9 @@ export default function SettingsPage() {
 
           {/* About */}
           <section className="glass-card p-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-2">About Archivr</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-2">About Archivrr</h2>
             <p className="text-text-secondary text-sm leading-relaxed">
-              Archivr is an open-source Instagram saved posts organizer. All data is stored locally in your browser using IndexedDB — nothing is sent to any server except AI analysis requests (when you choose to use them).
+              Archivrr is an open-source Instagram saved posts organizer. All data is stored locally in your browser using IndexedDB — nothing is sent to any server except AI analysis requests (when you choose to use them).
             </p>
             <p className="text-text-secondary text-xs mt-3">
               Made by chikit.
@@ -240,14 +240,33 @@ export default function SettingsPage() {
         </motion.div>
       </div>
 
-      {/* Clear Confirm Modal */}
-      <Modal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)} title="Clear All Data?" size="sm">
-        <p className="text-text-secondary text-sm mb-4">
-          This will permanently delete all posts, collections, tags, and settings. This action cannot be undone.
-        </p>
-        <div className="flex gap-2 justify-end">
-          <Button variant="ghost" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
-          <Button variant="danger" onClick={handleClearAll}>Clear Everything</Button>
+      {/* Clear Confirm Modal — stylish destructive confirmation */}
+      <Modal isOpen={showClearConfirm} onClose={() => setShowClearConfirm(false)} title="" size="sm">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border-2 border-red-500/30 flex items-center justify-center mb-4">
+            <AlertTriangle size={32} className="text-red-400" />
+          </div>
+          <h3 className="text-lg font-bold text-text-primary mb-2">Delete Everything?</h3>
+          <p className="text-text-secondary text-sm mb-1">
+            This will <strong className="text-red-400">permanently delete</strong> all your data:
+          </p>
+          <ul className="text-text-secondary text-xs space-y-1 mb-5">
+            <li>All imported posts</li>
+            <li>All collections and tags</li>
+            <li>Your API key</li>
+          </ul>
+          <p className="text-red-400/80 text-xs font-medium mb-5">
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3 w-full">
+            <Button variant="ghost" onClick={() => setShowClearConfirm(false)} className="flex-1">
+              Keep My Data
+            </Button>
+            <Button variant="danger" onClick={handleClearAll} className="flex-1">
+              <Trash2 size={14} />
+              Delete Everything
+            </Button>
+          </div>
         </div>
       </Modal>
 

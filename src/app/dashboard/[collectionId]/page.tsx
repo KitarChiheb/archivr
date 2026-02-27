@@ -73,7 +73,7 @@ export default function CollectionPage() {
     const post = usePostStore.getState().posts.find((p) => p.id === postId);
     if (!post) return;
     setAnalyzingPostId(postId);
-    addToast('ai', 'Archivr AI is analyzing...');
+    addToast('ai', 'Archivrr AI is analyzing...');
     try {
       const result = await analyzePost(post.url, post.caption, (msg, variant) => addToast(variant, msg));
       await bulkAddTags(postId, result.tags);

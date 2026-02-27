@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bookmark, Plus, Sparkles, Settings, Hash, FolderOpen } from 'lucide-react';
+import { Bookmark, Plus, Sparkles, Settings, Hash, FolderOpen, Import, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { usePostStore } from '@/lib/store/usePostStore';
@@ -59,8 +59,8 @@ export default function Sidebar({ onAIAutoTag, isAutoTagging }: SidebarProps) {
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-border bg-bg-surface overflow-y-auto hidden lg:flex">
       {/* Logo */}
       <div className="p-4 pb-2">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="gradient-text text-xl font-bold">Archivr</span>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="gradient-text text-xl font-bold">Archivrr</span>
         </Link>
       </div>
 
@@ -220,15 +220,31 @@ export default function Sidebar({ onAIAutoTag, isAutoTagging }: SidebarProps) {
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="space-y-1">
           <Link
-            href="/settings"
-            className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-all duration-200"
+            href="/"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-all duration-200"
           >
-            <Settings size={14} />
-            Settings
+            <Home size={14} />
+            Home
           </Link>
-          <ThemeToggle />
+          <Link
+            href="/import"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-all duration-200"
+          >
+            <Import size={14} />
+            Import More
+          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/settings"
+              className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover transition-all duration-200"
+            >
+              <Settings size={14} />
+              Settings
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </aside>

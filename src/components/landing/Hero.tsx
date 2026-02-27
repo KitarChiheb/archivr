@@ -65,7 +65,7 @@ export default function Hero() {
           transition={{ delay: 0.1 }}
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card mb-8"
         >
-          <span className="gradient-text font-bold text-sm">Archivr</span>
+          <span className="gradient-text font-bold text-sm">Archivrr</span>
           <span className="text-text-secondary text-xs">v1.0</span>
         </motion.div>
 
@@ -87,7 +87,7 @@ export default function Hero() {
           transition={{ delay: 0.35, duration: 0.6 }}
           className="text-lg text-text-secondary max-w-xl mx-auto mb-10 leading-relaxed"
         >
-          Archivr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive.
+          Archivrr turns your chaotic saved posts pile into a searchable, tagged, AI-powered personal archive.
         </motion.p>
 
         {/* CTA */}
@@ -143,7 +143,7 @@ export default function Hero() {
               {/* Sidebar mockup */}
               <div className="w-44 shrink-0 hidden sm:block space-y-3">
                 <div className="flex items-center gap-2 px-3 py-1.5">
-                  <span className="gradient-text font-bold text-sm">Archivr</span>
+                  <span className="gradient-text font-bold text-sm">Archivrr</span>
                 </div>
                 <div className="space-y-1">
                   {[
@@ -212,7 +212,7 @@ export default function Hero() {
 
       {/* Footer */}
       <footer className="mt-20 pb-8 text-center text-text-secondary text-xs">
-        <p>&copy; {new Date().getFullYear()} Archivr. Made by chikit.</p>
+        <p>&copy; {new Date().getFullYear()} Archivrr. Made by chikit.</p>
       </footer>
     </section>
   );

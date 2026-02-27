@@ -64,10 +64,16 @@ export async function POST(request: NextRequest) {
     const isAuth = message.includes('401') || message.includes('Unauthorized');
     const isPayment = message.includes('402') || message.includes('insufficient');
 
-    const status = isRateLimit ? 429 : isAuth ? 401 : isPayment ? 402 : 500;
+    // Extract the actual status code from the OpenRouter error message if present
+    const statusMatch = message.match(/\((\d{3})\)/);
+    const originalStatus = statusMatch ? parseInt(statusMatch[1]) : null;
+
+    const status = isRateLimit ? 429 : isAuth ? 401 : isPayment ? 402 : (originalStatus || 500);
+    // All non-auth errors are retryable (the client will try the next model)
+    const retryable = !isAuth && !isPayment;
 
     return NextResponse.json(
-      { error: message, retryable: isRateLimit },
+      { error: message, retryable },
       { status }
     );
   }
