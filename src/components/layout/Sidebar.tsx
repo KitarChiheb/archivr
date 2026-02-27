@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bookmark, Plus, Sparkles, Settings, Hash, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { usePostStore } from '@/lib/store/usePostStore';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { getTagColor } from '@/lib/utils/colors';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { hasApiKey } from '@/lib/ai/openrouter';
 
 // 📚 LEARN: The sidebar is persistent across dashboard routes via the dashboard layout.
 // It uses Zustand selectors to reactively show post counts and tag clouds.
@@ -20,15 +21,23 @@ interface SidebarProps {
 
 export default function Sidebar({ onAIAutoTag, isAutoTagging }: SidebarProps) {
   const pathname = usePathname();
-  const posts = usePostStore((s) => s.getActivePosts());
-  const getAllTags = usePostStore((s) => s.getAllTags);
+  const allPosts = usePostStore((s) => s.posts);
+  const posts = useMemo(() => allPosts.filter((p) => !p.isDeleted), [allPosts]);
   const collections = useCollectionStore((s) => s.collections);
   const addCollection = useCollectionStore((s) => s.addCollection);
 
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const tagCounts = getAllTags();
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const post of posts) {
+      for (const tag of post.tags) {
+        counts[tag] = (counts[tag] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [posts]);
   const sortedTags = Object.entries(tagCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 15);
@@ -196,14 +205,21 @@ export default function Sidebar({ onAIAutoTag, isAutoTagging }: SidebarProps) {
 
       {/* Bottom actions */}
       <div className="p-3 border-t border-border space-y-2">
-        <button
-          onClick={onAIAutoTag}
-          disabled={isAutoTagging}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium gradient-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50"
-        >
-          <Sparkles size={14} className={isAutoTagging ? 'animate-spin' : ''} />
-          {isAutoTagging ? 'Auto-tagging...' : 'AI Auto-Tag All'}
-        </button>
+        <div className="relative group">
+          <button
+            onClick={onAIAutoTag}
+            disabled={isAutoTagging || !hasApiKey()}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium gradient-accent text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Sparkles size={14} className={isAutoTagging ? 'animate-spin' : ''} />
+            {isAutoTagging ? 'Auto-tagging...' : 'AI Auto-Tag All'}
+          </button>
+          {!hasApiKey() && (
+            <div className="absolute bottom-full left-0 right-0 mb-1 p-2 rounded-lg bg-bg text-text-secondary text-[10px] border border-border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none text-center">
+              Add your OpenRouter API key in Settings to enable AI
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <Link
             href="/settings"

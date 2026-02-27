@@ -12,7 +12,7 @@ import Input from '@/components/ui/Input';
 import { usePostStore } from '@/lib/store/usePostStore';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { useToastStore } from '@/lib/store/useToastStore';
-import { analyzePost } from '@/lib/ai/openrouter';
+import { analyzePost, hasApiKey } from '@/lib/ai/openrouter';
 import { getTagColor } from '@/lib/utils/colors';
 import { SavedPost, ViewMode, SortOption } from '@/lib/types';
 import Link from 'next/link';
@@ -25,7 +25,8 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
 
-  const posts = usePostStore((s) => s.getActivePosts());
+  const allPosts = usePostStore((s) => s.posts);
+  const posts = useMemo(() => allPosts.filter((p) => !p.isDeleted), [allPosts]);
   const updatePost = usePostStore((s) => s.updatePost);
   const deletePost = usePostStore((s) => s.deletePost);
   const moveToCollection = usePostStore((s) => s.moveToCollection);
@@ -94,23 +95,38 @@ export default function DashboardPage() {
   }, [posts]);
 
   const handleAIAnalyze = useCallback(async (postId: string) => {
-    const post = posts.find((p) => p.id === postId);
+    if (!hasApiKey()) {
+      addToast('error', 'Please add your OpenRouter API key in Settings first.');
+      return;
+    }
+    const post = usePostStore.getState().posts.find((p) => p.id === postId);
     if (!post) return;
 
     setAnalyzingPostId(postId);
     addToast('ai', 'Archivr AI is analyzing...');
 
     try {
-      const result = await analyzePost(post.url, post.caption);
+      const result = await analyzePost(post.url, post.caption, (msg, variant) => addToast(variant, msg));
       await bulkAddTags(postId, result.tags);
       await updatePost(postId, { aiAnalyzed: true });
       addToast('success', `Added ${result.tags.length} tags!`);
-    } catch {
-      addToast('error', 'AI analysis failed. Check your API key in Settings.');
+    } catch (err) {
+      const code = err instanceof Error ? err.message : '';
+      if (code === 'NO_API_KEY') {
+        addToast('error', 'Please add your OpenRouter API key in Settings to use AI features.');
+      } else if (code === 'INVALID_KEY') {
+        addToast('error', 'Your API key is invalid. Please check it in Settings.');
+      } else if (code === 'NO_CREDITS') {
+        addToast('error', 'No credits on your OpenRouter account. Add $1-5 at openrouter.ai/credits for premium AI.');
+      } else if (code === 'ALL_MODELS_FAILED') {
+        addToast('error', 'All AI models are currently unavailable. Try again later or add credits to your OpenRouter account.');
+      } else {
+        addToast('error', 'AI analysis failed. Check your API key in Settings.');
+      }
     } finally {
       setAnalyzingPostId(null);
     }
-  }, [posts, bulkAddTags, updatePost, addToast]);
+  }, [bulkAddTags, updatePost, addToast]);
 
   const handleDelete = useCallback((postId: string) => {
     deletePost(postId);

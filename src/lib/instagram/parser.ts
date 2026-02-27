@@ -10,7 +10,8 @@ interface InstagramExportV1 {
     title: string;
     string_map_data: {
       'Saved on': {
-        value: string;
+        href?: string;
+        value?: string;
         timestamp: number;
       };
     };
@@ -60,9 +61,11 @@ function parseV1(data: InstagramExportV1): ParsedPost[] {
   const results: ParsedPost[] = [];
   for (const item of data.saved_saved_media) {
     const savedOn = item.string_map_data?.['Saved on'];
-    if (!savedOn?.value) continue;
+    // Real Instagram exports use 'href', older ones may use 'value'
+    const url = savedOn?.href || savedOn?.value;
+    if (!url) continue;
     const post: ParsedPost = {
-      url: savedOn.value,
+      url,
       savedAt: savedOn.timestamp || Math.floor(Date.now() / 1000),
     };
     if (item.title) post.caption = item.title;
@@ -131,8 +134,10 @@ export function parseInstagramExport(rawJson: unknown): ParsedPost[] {
 }
 
 // 📚 LEARN: URL validation prevents garbage data from entering our store.
-// We use a simple regex rather than a full URL parser — good enough for Instagram URLs.
-const INSTAGRAM_URL_REGEX = /^https?:\/\/(www\.)?instagram\.com\/(p|reel|tv)\/[\w-]+\/?/i;
+// We accept any instagram.com URL with a path segment (post, reel, story, profile, etc.)
+// This covers: /p/XXX, /reel/XXX, /tv/XXX, /stories/XXX, and even /username/ links.
+// Query params (?igsh=, ?utm_source=) are allowed after the path.
+const INSTAGRAM_URL_REGEX = /^https?:\/\/(www\.)?instagram\.com\/.+/i;
 
 export function isValidInstagramUrl(url: string): boolean {
   return INSTAGRAM_URL_REGEX.test(url.trim());

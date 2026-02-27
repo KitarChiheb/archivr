@@ -7,7 +7,7 @@ import ToastContainer from '@/components/ui/Toast';
 import { usePostStore } from '@/lib/store/usePostStore';
 import { useCollectionStore } from '@/lib/store/useCollectionStore';
 import { useToastStore } from '@/lib/store/useToastStore';
-import { analyzePost } from '@/lib/ai/openrouter';
+import { analyzePost, hasApiKey } from '@/lib/ai/openrouter';
 
 // 📚 LEARN: The dashboard layout wraps all /dashboard/* routes.
 // It provides the sidebar, mobile nav, and handles store hydration.
@@ -18,7 +18,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const hydrateCollection = useCollectionStore((s) => s.hydrate);
   const isPostHydrated = usePostStore((s) => s.isHydrated);
   const isCollectionHydrated = useCollectionStore((s) => s.isHydrated);
-  const posts = usePostStore((s) => s.getActivePosts());
   const bulkAddTags = usePostStore((s) => s.bulkAddTags);
   const updatePost = usePostStore((s) => s.updatePost);
   const addToast = useToastStore((s) => s.addToast);
@@ -31,8 +30,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     hydrateCollection();
   }, [hydratePost, hydrateCollection]);
 
+  // 📚 LEARN: We snapshot untagged posts at call time to avoid stale closure issues.
   const handleAIAutoTag = useCallback(async () => {
-    const untaggedPosts = posts.filter((p) => !p.aiAnalyzed);
+    if (!hasApiKey()) {
+      addToast('error', 'Please add your OpenRouter API key in Settings first.');
+      return;
+    }
+
+    const currentPosts = usePostStore.getState().posts.filter((p) => !p.isDeleted);
+    const untaggedPosts = currentPosts.filter((p) => !p.aiAnalyzed);
     if (untaggedPosts.length === 0) {
       addToast('info', 'All posts are already analyzed!');
       return;
@@ -42,9 +48,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     addToast('ai', `Analyzing ${untaggedPosts.length} posts...`);
 
     let processed = 0;
+    let failures = 0;
     for (const post of untaggedPosts) {
       try {
-        const result = await analyzePost(post.url, post.caption);
+        const result = await analyzePost(post.url, post.caption, (msg, variant) => addToast(variant, msg));
         await bulkAddTags(post.id, result.tags);
         await updatePost(post.id, { aiAnalyzed: true });
         processed++;
@@ -54,15 +61,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         // 📚 LEARN: Rate limit respect — wait between API calls to avoid 429 errors.
-        await new Promise((r) => setTimeout(r, 500));
-      } catch {
-        addToast('error', `Failed to analyze post ${processed + 1}. Continuing...`);
+        await new Promise((r) => setTimeout(r, 800));
+      } catch (err) {
+        const code = err instanceof Error ? err.message : '';
+        failures++;
+        if (code === 'NO_API_KEY') {
+          addToast('error', 'Please add your OpenRouter API key in Settings.');
+          break;
+        } else if (code === 'INVALID_KEY') {
+          addToast('error', 'Your API key is invalid. Please check it in Settings.');
+          break;
+        } else if (code === 'NO_CREDITS') {
+          addToast('error', 'No credits on your OpenRouter account. Add credits at openrouter.ai/credits for premium AI.');
+          break;
+        } else if (code === 'ALL_MODELS_FAILED') {
+          addToast('error', 'All AI models are rate-limited. Try again later or add credits to your OpenRouter account.');
+          break;
+        } else {
+          addToast('error', `Failed to analyze post ${processed + failures}. Continuing...`);
+        }
+        // Wait longer after failures
+        await new Promise((r) => setTimeout(r, 2000));
       }
     }
 
     setIsAutoTagging(false);
-    addToast('success', `Done! Analyzed ${processed} posts.`);
-  }, [posts, bulkAddTags, updatePost, addToast]);
+    if (processed > 0) {
+      addToast('success', `Done! Analyzed ${processed} posts${failures > 0 ? ` (${failures} failed)` : ''}.`);
+    }
+  }, [bulkAddTags, updatePost, addToast]);
 
   if (!isPostHydrated || !isCollectionHydrated) {
     return (

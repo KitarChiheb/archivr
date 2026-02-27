@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { FolderInput, Tag, Sparkles, ExternalLink, Trash2 } from 'lucide-react';
+import { FolderInput, Tag, Sparkles, ExternalLink, Trash2, Instagram } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { SavedPost, Collection } from '@/lib/types';
 import { formatRelativeTime } from '@/lib/utils/dates';
@@ -66,8 +66,13 @@ export default function PostCard({
             onLoad={() => setImageLoaded(true)}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-bg-surface-hover">
-            <ExternalLink size={24} className="text-text-secondary" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-bg-surface-hover gap-2">
+            <div className="w-12 h-12 rounded-xl bg-accent-purple/10 flex items-center justify-center">
+              <Instagram size={24} className="text-accent-purple" />
+            </div>
+            <span className="text-text-secondary text-[10px] px-3 text-center truncate max-w-full">
+              {post.url.replace(/https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, '') || 'Instagram Post'}
+            </span>
           </div>
         )}
 
@@ -144,9 +149,9 @@ export default function PostCard({
         )}
 
         {/* Caption */}
-        {post.caption && (
+        {(post.caption || !post.thumbnailUrl) && (
           <p className="text-xs text-text-primary line-clamp-2 mb-2 leading-relaxed">
-            {post.caption}
+            {post.caption || post.url.replace(/https?:\/\/(www\.)?instagram\.com/, '').replace(/\/$/, '')}
           </p>
         )}
 

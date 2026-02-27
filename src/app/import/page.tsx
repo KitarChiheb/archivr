@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Link as LinkIcon, Play, FileJson, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, Link as LinkIcon, Play, FileJson, CheckCircle, AlertTriangle, ExternalLink } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import Button from '@/components/ui/Button';
@@ -13,6 +13,7 @@ import { useToastStore } from '@/lib/store/useToastStore';
 import { parseInstagramExport, parseUrlList, isValidInstagramUrl } from '@/lib/instagram/parser';
 import { DEMO_POSTS, DEMO_COLLECTIONS } from '@/lib/utils/demo-data';
 import { SavedPost, ImportMethod } from '@/lib/types';
+import TopNav from '@/components/layout/TopNav';
 
 // 📚 LEARN: The import page is a critical onboarding step. Three import methods
 // ensure every user can get started regardless of their technical comfort level.
@@ -179,7 +180,9 @@ export default function ImportPage() {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen">
+      <TopNav />
+      <div className="flex items-center justify-center p-4 min-h-[calc(100vh-3.5rem)]">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -265,9 +268,19 @@ export default function ImportPage() {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-text-secondary text-xs mt-2">
-                    Instagram &gt; Settings &gt; Your Activity &gt; Download Your Information
-                  </p>
+                  <div className="mt-4 p-3 rounded-xl bg-bg-surface border border-border text-left">
+                    <p className="text-text-primary text-xs font-semibold mb-2">How to get your Instagram JSON file:</p>
+                    <ol className="text-text-secondary text-xs space-y-1 list-decimal list-inside leading-relaxed">
+                      <li>Go to <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener noreferrer" className="text-accent-purple hover:underline inline-flex items-center gap-0.5">Accounts Center <ExternalLink size={10} /></a></li>
+                      <li>Click <strong className="text-text-primary">Your information and permissions</strong></li>
+                      <li>Click <strong className="text-text-primary">Export your information</strong></li>
+                      <li>Click <strong className="text-text-primary">Create export</strong> → select your profile</li>
+                      <li>Choose <strong className="text-text-primary">Export to device</strong>, format: <strong className="text-text-primary">JSON</strong></li>
+                      <li>Under info to export, select <strong className="text-text-primary">Saved posts</strong></li>
+                      <li>Click <strong className="text-text-primary">Start export</strong> — it may take 5–15 minutes</li>
+                      <li>Once ready, download and unzip — upload the <code className="text-accent-purple">saved_posts.json</code> file here</li>
+                    </ol>
+                  </div>
                 </div>
               </div>
             )}
@@ -278,7 +291,7 @@ export default function ImportPage() {
                 <textarea
                   value={urlText}
                   onChange={(e) => setUrlText(e.target.value)}
-                  placeholder={`https://www.instagram.com/p/ABC123/\nhttps://www.instagram.com/p/DEF456/\nhttps://www.instagram.com/reel/GHI789/`}
+                  placeholder={`https://www.instagram.com/p/ABC123/\nhttps://www.instagram.com/reel/DEF456/\nhttps://www.instagram.com/reels/GHI789/\nhttps://www.instagram.com/tv/JKL012/\nhttps://www.instagram.com/stories/username/123/`}
                   className="w-full h-48 px-4 py-3 rounded-xl bg-bg-surface border border-border text-text-primary text-sm placeholder:text-text-secondary/40 resize-none focus:outline-none focus:ring-2 focus:ring-accent-purple/50 focus:border-accent-purple/50"
                 />
                 <div className="flex items-center justify-between mt-3">
@@ -349,13 +362,8 @@ export default function ImportPage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Back link */}
-        <div className="text-center mt-6">
-          <a href="/" className="text-text-secondary text-sm hover:text-text-primary transition-colors">
-            &larr; Back to home
-          </a>
-        </div>
       </motion.div>
+      </div>
       <ToastContainer />
     </div>
   );

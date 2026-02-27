@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Bookmark, Tag, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import ThemeToggle from '@/components/ui/ThemeToggle';
+import TopNav from '@/components/layout/TopNav';
 
 // 📚 LEARN: The landing page hero is the first thing users see.
 // An animated gradient mesh background creates visual interest without stock photos.
@@ -29,10 +29,10 @@ const features = [
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4">
-      {/* Theme toggle — top right */}
-      <div className="absolute top-4 right-4 z-20">
-        <ThemeToggle />
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
+      {/* Global navigation */}
+      <div className="absolute top-0 left-0 right-0 z-20">
+        <TopNav />
       </div>
 
       {/* Animated gradient mesh background */}
@@ -212,7 +212,7 @@ export default function Hero() {
 
       {/* Footer */}
       <footer className="mt-20 pb-8 text-center text-text-secondary text-xs">
-        <p>&copy; {new Date().getFullYear()} Archivr. Built with Next.js &amp; AI.</p>
+        <p>&copy; {new Date().getFullYear()} Archivr. Made by chikit.</p>
       </footer>
     </section>
   );
